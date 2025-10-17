@@ -1,3 +1,6 @@
+\*
+This aims to test the the accuracy of the model when the model's trained more times and to test the effect of dropout layer.
+  *\
 #include <bits/stdc++.h>
 
 #include <opencv2/opencv.hpp>
