@@ -1,0 +1,303 @@
+\documentclass[
+% draft,          % 草稿模式
+aspectratio=169,  % 使用 16:9 比例
+]{ctexbeamer}
+\mode<presentation>
+
+\usepackage{graphicx} %插入图片的宏包
+\usepackage{float} %设置图片浮动位置的宏包
+\usepackage{subfigure} %插入多图时用子图显示的宏包
+\usetheme[blue,max]{sjtubeamer}
+% 使用 maxplus/max/min 切换标题页样式
+% 使用 red/blue 切换主色调
+% 使用 light/dark 切换亮/暗色模式
+% 使用外样式关键词以获得不同的边栏样式
+%   miniframes infolines  sidebar 
+%   default    smoothbars split	 
+%   shadow     tree       smoothtree
+% 使用 topright/bottomright 切换徽标位置
+% 使用逗号分隔列表以同时使用多种选项
+
+% \tikzexternalize[prefix=build/]
+% 如果您需要缓存 tikz 图像，请取消注释上一行，并在编译选项中添加 -shell-escape。
+
+\usepackage[backend=biber,style=gb7714-2015]{biblatex}
+\addbibresource{thesis.bib}
+
+\institute[SJTU]{上海交通大学 2025级ACM班} % 组织
+
+\title{手写数字识别}         % 标题
+\subtitle{卷积神经网络的一些应用}       % 副标题
+\author{WyEhNf}                       % 作者
+\date{\today}                        % 日期  
+
+\begin{document}
+	
+	\maketitle                           % 创建标题页
+	
+	\part{CNN的工作模式}
+	
+	% 使用节目录
+	\AtBeginSection[]{
+		\begin{frame}
+			% \tableofcontents[currentsection,hideallsubsections]  % 传统节目录             
+			\sectionpage                        % 节页
+		\end{frame}
+	}
+	
+	\section{基本结构}
+	
+	\begin{frame}
+		\frametitle{结构}
+		CNN网络的主要结构如下：
+		\begin{itemize}
+			\item 输入层
+			\item 卷积层
+			\item 池化层
+			\item 输出层 
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		在单次训练中，CNN网络主要完成以下流程：
+		\frametitle{运行流程}
+		\begin{itemize}
+		\item 接受输入向量
+		\item 前向传播
+		\item 计算梯度
+		\item 反向传播
+		\end{itemize}
+	\end{frame}
+
+	
+	\section{各层实现}
+	
+	\begin{frame}
+		\frametitle{卷积神经元}
+		考虑一般的神经元，对于输入向量$X$,其转换函数为：
+		$$
+		f(x)=\sum{x_i·w_i}+b
+		$$
+		而卷积神经元相当于将向量间的内积变为权值矩阵与输入向量/矩阵的卷积，即对于输入向量$X$,其转换函数为：
+		$$
+		f(x)=W^T*X+b
+		$$
+		这对二维图像明显有这个更好的特征反映能力。
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{激活函数}
+		常见的激活函数有两种：
+		\begin{block}{Relu函数}
+		$$
+		f(x)=x[x>0]
+		$$
+		\end{block}
+		\begin{block}{Sigmoid函数}
+			$$
+			f(x)=\dfrac{1}{1+\mathbf{exp}(-x)}
+			$$
+		\end{block}
+		激活函数的目的是将卷积这一线性操作非线性化。
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{卷积核的移动与边界填充}
+		注意到卷积核在移动的时候对边界信息的获取是弱的，一般由以下填充模式：
+		\begin{block}{Valid模式}
+			不进行额外填充，$r*c$的矩阵经卷积后输出为$(r-n+1)*(c-m+1)$的矩阵。
+		\end{block}
+			\begin{block}{Full模式}
+			充分填充使得卷积核中心经过输入矩阵每个位置，$r*c$的矩阵经卷积后输出为$(r+n-1)*(c+m-1)$的矩阵。
+		\end{block}
+			\begin{block}{Same模式}
+			适当填充使得输出矩阵大小不变。
+		\end{block}
+	\end{frame}
+	
+	
+
+		\begin{frame}
+		\frametitle{池化层}
+		池化层的目的是降低进入后续层的数据规模，仅保留每个局部的整体特征。
+		池化窗口的移动和卷积核类似，但不存在填充的问题。
+		一般可以取窗口内平均或者max/min。
+	\end{frame}
+	
+	
+	
+	\begin{frame}
+		\frametitle{全连接层}
+		全连接层相当于对所得到的数据的总结，可以看作是一个收束的神经元,将数据数量约束到最终期望的规模，
+		
+		特别的，全连接层的激活函数需要将数据转化为可供与标签比较的量。这个激活后的输出即为最终输出。
+	\end{frame}
+	
+	\part{CNN在数字识别中的应用}
+		% 使用节目录
+	\AtBeginSection[]{
+		\begin{frame}
+			% \tableofcontents[currentsection,hideallsubsections]  % 传统节目录             
+			\sectionpage                        % 节页
+		\end{frame}
+	}
+	\section{网络搭建}
+	\begin{frame}
+		\frametitle{5层CNN网络}
+		MINST数据集中摹刻数字的灰度矩阵是28*28的，最终对每张图片的判断应该是一个其为0-9的概率。
+		\begin{itemize}
+			\item 卷积层（5*5,6核）输出6张24*24的图片（选用Relu函数激活）
+			\item 池化层（2*2,max）输出6张12*12的图片
+			\item 卷积层（5*5,12核）输出12张8*8的图片
+			\item 池化层（2*2,max）输出12张4*4的图片
+			\item 全连接层 接受一个192维向量并转换为一个10维的描述概率的向量,并评估误差
+		\end{itemize}
+	\end{frame}
+	\begin{frame}
+		\frametitle{全连接层的激活函数}
+		这里采用softmax函数，这个函数可以将一组数据归一化到$(0,1)$，且恰好能表示概率分布。
+		\begin{block}{Softmax函数}
+		$$
+		\mathbf{Softmax(y_i)}=\dfrac{\mathbf{exp(y_i)}}{\sum{\mathbf{exp(y_j)}}}
+		$$
+		\end{block}
+		
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{误差评估}
+	
+		每次评估误差后根据误差修正卷积核的参量。
+			\begin{block}{交叉熵损失函数}
+				$$
+				E=-\sum{p_i}lnY_i
+				$$
+			\end{block}
+		其中$p_i$是真实概率，$Y_i$是$\mathbf{Softmax}$函数所得。
+	\end{frame}
+	
+	\section{误反向传播}
+	\begin{frame}
+		\frametitle{输出层-Softmax函数的梯度}
+		$$
+		\dfrac{\partial{Y_j}}{\partial{y_i}}=	\dfrac{\mathbf{exp}(y_i)(\sum{ \mathbf{exp}(y_j)-\mathbf{exp}(y_i)})}{(\sum{\mathbf{exp}(y_j)})^2}=Y_i(1-Y_i)\quad (i=j)
+		$$
+		$$
+		\dfrac{\partial{Y_j}}{\partial{y_i}}=	\dfrac{\mathbf{exp}(y_j)(0-\mathbf{exp}(y_i))}{(\sum{\mathbf{exp}(y_j)})^2}=-Y_i·Y_j \quad(i\neq j)
+		$$
+		$$
+		grad_i=\dfrac{\partial{E}}{\partial{y_i}}=\dfrac{\partial{(\sum{E_j})}}{\partial{y_i}}=\sum{\dfrac{\partial{E_j}}{\partial{Y_j}}\cdot \dfrac{\partial{Y_j}}{\partial{y_i}}}=-\dfrac{p_i}{Y_i}Y_i(1-Y_i)+\sum_{j \neq i}{-\dfrac{p_j}{Y_j}Y_jY_i}
+		$$
+		结合$\sum p_i =1$,可以得到：
+		$$
+		grad_i=Y_i-p_i
+		$$
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{输出层-全连接神经元的梯度}
+		方便起见，此后我们把上一层（也就是正向传播的下一层）所得梯度成为$pre_i$
+	
+		$$
+		grad_i=\dfrac{\partial{E}}{\partial{y_i}}=\sum_{j=0} ^{9}{\dfrac{\partial{E_j}}{\partial{y_j}}\cdot \dfrac{\partial{y_j}}{\partial{x_i}}}
+		=\sum_{j=0} ^{9}{pre_j \cdot w_{ij}}
+		$$
+		其中$w_{ij}$为全输出层神经元将$x_i$贡献到$y_j$的权重。
+	\end{frame}
+	
+		\begin{frame}
+		\frametitle{池化层}
+		在全连接层中我们得到了12个4*4矩阵的梯度，那么经过池化层的反向传播后，矩阵扩展为原本的8*8的大小.
+		由于这里池化采取的是取max，所以反向传播的时候只要维持好这个性质就可以了。
+		\\
+		一种可行的构造是维持池化窗口中最大值位置上的数不变，其余位置填上0。	
+	\end{frame}
+	
+
+	\begin{frame}
+	\frametitle{卷积层}	
+	显然Relu函数的导数为:$Relu'(x)=[x>0]$。
+	\\
+	结合矩阵卷积的求导方法，有：
+	$$
+	grad_i=\sum {(pre_i \cdot {Relu'(y_i)})*w'_{ij}}
+	$$
+	其中$w'_{ij}$为将输入的第$j$张图片贡献到输出第$i$张图片的权值矩阵的旋转矩阵。
+	前两层的梯度推导是类似的。
+	\end{frame}
+		\begin{frame}
+		\frametitle{参数更新}	
+		我们已经求出每一层的输出$y_{i}$关于$E$的梯度。
+		鉴于每一层的转换都形如：
+		$$
+		y_i=w_{ij}x_j+b_i
+		$$
+		显然有：
+		$$
+		\dfrac{\partial{E}}{\partial{w_{ij}}}=\dfrac{\partial{E}}{\partial{y_i}}\cdot x_j
+		$$
+		$$
+		\dfrac{\partial{E}}{\partial{b_{i}}}=\dfrac{\partial{E}}{\partial{y_i}}
+		$$
+		据此我们可以更新任意参量$X$:
+		$$
+			X'=X-\alpha \cdot grad_X
+		$$
+		其中$\alpha$为学习率。
+	\end{frame}
+	\section{实际训练}
+	\begin{frame}
+	\frametitle{训练参数与结果}	
+	\begin{itemize}
+	\item 学习率：初始设置为0.03，随着训练的进行逐渐递减到0.001，避免在训练后期步长过大跳过最优点
+	\item 训练集：MINST训练集提供了60000份样本，出于时间考量，循环训练5次。
+	\item 测试集：10000份与训练集格式相同的样本
+	\end{itemize}
+	训练结果：成功率约为98.2\%
+	\end{frame}
+	\section{不同模型的比较}
+		\begin{frame}
+		\frametitle{卷积核的数量}	
+		\begin{itemize}
+			\item 双卷积层（6核，12核）：成功率98.2\%
+			\item 双卷积层（12核，16核）：成功率98.5\%
+			\item 双卷积层（16核，32核）：成功率98.7\%
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{卷积层数}	
+		\begin{itemize}
+			\item 双卷积层（6核，12核）：成功率98.2\%
+			\item 三卷积层（6核，12核，16核（1*1））：成功率96.5\%
+			\item 三卷积层（16核，32核，32核（3*3）：成功率97.8\%
+		\end{itemize}
+	\end{frame}
+	
+	\begin{frame}
+		\frametitle{对数据的重复训练}	
+			
+				\begin{figure}[H] %H为当前位置，!htb为忽略美学标准，htbp为浮动图形
+					\centering %图片居中
+					\subfigure[Without Dropout]{
+					\includegraphics[width=0.27\textwidth]{test1.png}}
+					\subfigure[With Dropout]{
+						\includegraphics[width=0.2\textwidth]{test2.png}} %插入图片，[]中设置图片大小，{}中是图片文件名}
+					%最终文档中希望显示的图片标题
+					\label{Fig.main2} %用于文内引用的标签
+				\end{figure}
+		可以看到由于数据的复杂性较低，dropout层对减缓过拟合的作用甚至不如其丢失数据对准确性造成的影响大。
+	\end{frame}
+	
+	\part{参考资料}
+	\begin{frame}
+		资料链接：
+		\begin{itemize}
+		\item \href{https://zhuanlan.zhihu.com/p/122559611}{大话卷积神经网络}
+		\item \href{https://www.cnblogs.com/weijiakai}{weijiakai's blog}（C++/OpenCV实现CNN系列）
+		\end{itemize}
+	\end{frame}
+	\makebottom       % 创建结束页
+	
+	
+\end{document}
