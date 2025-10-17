@@ -1,6 +1,6 @@
 /*
 This version aims to test the efficienct and accuracy of the model
-when the size of covolution core is changed.
+when the number of covolution core is changed.
 */
 #include <bits/stdc++.h>
 
