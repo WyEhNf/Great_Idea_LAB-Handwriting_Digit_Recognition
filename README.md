@@ -19,3 +19,5 @@ It's a project that reproduces the CNN model of handwriting digit recognition us
 
 `slide.pdf`中提及的不同模型（主要是卷积核大小/数量，卷积层数等的调整）对应的代码分别是`ver-1,2,3,4.cpp`
 
+利用python的torch库的实现是`CNNpy.py`
+
